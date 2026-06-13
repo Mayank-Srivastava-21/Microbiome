@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gut-Brain Axis Computational Model</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Model Parameters</h2>
+                <p class="subtitle">Configure simulation variables</p>
+            </div>
+            
+            <div class="parameter-section">
+                <h3>Microbiome Dynamics</h3>
+                <div class="input-group">
+                    <label for="b0-growth">B0 Birth Rate (Alcohol-tolerant)</label>
+                    <input type="number" id="b0-growth" value="0.25" step="0.01" min="0" max="1">
+                </div>
+                <div class="input-group">
+                    <label for="b1-growth">B1 Birth Rate (Commensal)</label>
+                    <input type="number" id="b1-growth" value="0.20" step="0.01" min="0" max="1">
+                </div>
+                <div class="input-group">
+                    <label for="inhibition">B0 Inhibition on B1</label>
+                    <input type="number" id="inhibition" value="0.15" step="0.01" min="0" max="1">
+                </div>
+                <div class="input-group">
+                    <label for="carrying-cap">Carrying Capacity (K)</label>
+                    <input type="number" id="carrying-cap" value="1000" step="10" min="100">
+                </div>
+                <div class="input-group">
+                    <label for="chem-prod">Chemical Production Rate</label>
+                    <input type="number" id="chem-prod" value="0.05" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="parameter-section">
+                <h3>Reinforcement Learning</h3>
+                <div class="input-group">
+                    <label for="learning-rate">Learning Rate (Alpha)</label>
+                    <input type="number" id="learning-rate" value="0.1" step="0.01" min="0" max="1">
+                </div>
+                <div class="input-group">
+                    <label for="discount">Discount Factor (Gamma)</label>
+                    <input type="number" id="discount" value="0.9" step="0.01" min="0" max="1">
+                </div>
+                <div class="input-group">
+                    <label for="epsilon">Exploration Rate (Epsilon)</label>
+                    <input type="number" id="epsilon" value="0.2" step="0.01" min="0" max="1">
+                </div>
+                <div class="input-group">
+                    <label for="kick-thresh">Kick Threshold</label>
+                    <input type="number" id="kick-thresh" value="50" step="1" min="0">
+                </div>
+            </div>
+
+            <div class="parameter-section">
+                <h3>Meal Configuration</h3>
+                <div class="input-group">
+                    <label for="num-meals">Number of Meals</label>
+                    <input type="number" id="num-meals" value="3" step="1" min="1" max="5">
+                </div>
+                <div id="meals-container"></div>
+            </div>
+
+            <div class="parameter-section">
+                <h3>Simulation Settings</h3>
+                <div class="input-group">
+                    <label for="sim-speed">Simulation Speed (ms/step)</label>
+                    <input type="number" id="sim-speed" value="50" step="10" min="10">
+                </div>
+                <div class="input-group">
+                    <label for="max-steps">Max Time Steps</label>
+                    <input type="number" id="max-steps" value="500" step="50" min="100">
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Gut-Brain Axis: Alcohol Dependency Model</h1>
+                <div class="controls">
+                    <button id="btn-start" class="btn btn-primary">Start</button>
+                    <button id="btn-pause" class="btn btn-secondary" disabled>Pause</button>
+                    <button id="btn-resume" class="btn btn-secondary" disabled>Resume</button>
+                    <button id="btn-stop" class="btn btn-danger" disabled>Stop</button>
+                    <button id="btn-reset" class="btn btn-outline">Reset</button>
+                </div>
+            </header>
+
+            <div class="status-bar">
+                <span id="status-text">Status: Idle</span>
+                <span id="step-counter">Step: 0 / 500</span>
+            </div>
+
+            <div class="graphs-grid">
+                <div class="graph-card">
+                    <div class="graph-header">
+                        <div>
+                            <h3>Microbiome Composition</h3>
+                            <p class="graph-subtitle">Population fluctuations of B0 and B1 over time</p>
+                        </div>
+                        <div class="graph-actions">
+                            <button class="btn-icon btn-expand" data-chart="microbiome" title="Expand">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                            </button>
+                            <button class="btn-icon btn-download" data-chart="microbiome" title="Download">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-microbiome"></canvas></div>
+                </div>
+
+                <div class="graph-card">
+                    <div class="graph-header">
+                        <div>
+                            <h3>Microbial Diversity (Shannon Index)</h3>
+                            <p class="graph-subtitle">Measures ecosystem health. Drops as B0 crowds out B1.</p>
+                        </div>
+                        <div class="graph-actions">
+                            <button class="btn-icon btn-expand" data-chart="diversity" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+                            <button class="btn-icon btn-download" data-chart="diversity" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-diversity"></canvas></div>
+                </div>
+
+                <div class="graph-card">
+                    <div class="graph-header">
+                        <div>
+                            <h3>Gut-Brain Chemical Signal</h3>
+                            <p class="graph-subtitle">Concentration of B0 metabolites. Acts as the reward signal for the brain.</p>
+                        </div>
+                        <div class="graph-actions">
+                            <button class="btn-icon btn-expand" data-chart="kick" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+                            <button class="btn-icon btn-download" data-chart="kick" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-kick"></canvas></div>
+                </div>
+
+                <div class="graph-card">
+                    <div class="graph-header">
+                        <div>
+                            <h3>Brain Reward System (Q-Values)</h3>
+                            <p class="graph-subtitle">Learned expected future reward for each meal. Drives food selection.</p>
+                        </div>
+                        <div class="graph-actions">
+                            <button class="btn-icon btn-expand" data-chart="qvalues" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+                            <button class="btn-icon btn-download" data-chart="qvalues" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-qvalues"></canvas></div>
+                </div>
+
+                <div class="graph-card">
+                    <div class="graph-header">
+                        <div>
+                            <h3>Meal Choice Over Time</h3>
+                            <p class="graph-subtitle">Which meal the RL agent selected at each time step.</p>
+                        </div>
+                        <div class="graph-actions">
+                            <button class="btn-icon btn-expand" data-chart="mealchoice" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+                            <button class="btn-icon btn-download" data-chart="mealchoice" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-mealchoice"></canvas></div>
+                </div>
+
+                <div class="graph-card">
+                    <div class="graph-header">
+                        <div>
+                            <h3>Dysbiosis Ratio (B0 Proportion)</h3>
+                            <p class="graph-subtitle">Proportion of B0 relative to total population. Approaches 1.0 in dependence.</p>
+                        </div>
+                        <div class="graph-actions">
+                            <button class="btn-icon btn-expand" data-chart="ratio" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+                            <button class="btn-icon btn-download" data-chart="ratio" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="chart-ratio"></canvas></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="graph-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Graph Title</h3>
+                <div class="modal-actions">
+                    <button id="modal-download" class="btn-icon btn-download" title="Download">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    </button>
+                    <button id="modal-close" class="btn-icon btn-close" title="Close">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-chart-container">
+                <canvas id="modal-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="simulation.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
