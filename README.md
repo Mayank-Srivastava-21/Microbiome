@@ -50,7 +50,7 @@ Population updates incorporate:
 
 The brain agent uses **Q-learning** to select meals:
 
-- **State**: Discretized B0 proportion (0-9)
+- **State**: [B0​,B1​,Kick,Diversity]
 - **Actions**: Selection from available meal options
 - **Reward**: Chemical signal strength from gut (B0 population × production rate)
 - **Policy**: Epsilon-greedy exploration-exploitation strategy
